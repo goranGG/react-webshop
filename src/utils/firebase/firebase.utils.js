@@ -4,6 +4,8 @@ import {
   signInWithPopup,
   signInWithRedirect,
   GoogleAuthProvider,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
 } from "firebase/auth";
 import { getFirestore, doc, getDoc, setDoc } from "firebase/firestore";
 
@@ -26,16 +28,22 @@ googleAuthProvider.setCustomParameters({
 });
 
 // handle login with Google
-export const googleAuth = getAuth();
+export const auth = getAuth();
 export const signInWithGooglePopup = () => {
-  return signInWithPopup(googleAuth, googleAuthProvider);
+  return signInWithPopup(auth, googleAuthProvider);
+};
+export const signInWithGoogleRedirect = () => {
+  return signInWithRedirect(auth, googleAuthProvider);
 };
 
 // get DB from firebase
 export const db = getFirestore();
 
 // store user to firebase
-export const createUserDocumentFromAuth = async (userAuth) => {
+export const createUserDocumentFromAuth = async (
+  userAuth,
+  additionalInformation = {}
+) => {
   // check does user instance exists in DB already
   // this will create virtual data to make sure nothing is overwritten
   const userDocRef = doc(db, "users", userAuth.uid);
@@ -53,10 +61,27 @@ export const createUserDocumentFromAuth = async (userAuth) => {
         displayName: userAuth.displayName,
         email: userAuth.email,
         createdAt: createdAt,
+        ...additionalInformation,
       });
     } catch (error) {
       console.log("Error creating user:", error);
     }
   }
   return userDocRef;
+};
+
+// method that will save new user to Firebase Authentication
+export const createAuthUserWithEmailAndPassword = async (email, password) => {
+  if (!email || !password) {
+    return;
+  }
+  return await createUserWithEmailAndPassword(auth, email, password);
+};
+
+// method that will login existing user
+export const signInAuthUserWithEmailAndPassword = async (email, password) => {
+  if (!email || !password) {
+    return;
+  }
+  return await signInWithEmailAndPassword(auth, email, password);
 };
